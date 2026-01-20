@@ -1,9 +1,7 @@
 module amf3v
 
 pub fn read_double(mut reader ByteReader) f64 {
-	// TODO: implement
-	reader.get_i64()
-	return 0.0
+	return int64_bits_to_double(reader.get_u64())
 }
 
 pub fn read_packed_int(mut reader ByteReader) int {
@@ -79,7 +77,7 @@ pub fn read(mut reader ByteReader) AmfAny {
 			mut array := AmfArray{}
 			array.associative_elements = read_property_list(mut reader)
 
-			for i in 0..value {
+			for _ in 0..value {
 				array.dense_elements << read(mut reader)
 			}
 
