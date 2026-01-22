@@ -161,7 +161,7 @@ pub fn (mut reader ByteReader) read() AmfAny {
 	panic("Undefined type ID ${type}")
 }
 
-pub fn open(data []u8) ByteReader {
+pub fn open_read(data []u8) ByteReader {
 	mut reader := ByteReader{
 		data: data
 	}

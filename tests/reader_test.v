@@ -6,7 +6,7 @@ import os
 fn test_read_array() {
 	file := os.read_bytes('./test_files/deploy_3.441.0_en_android_atc.amf3')!
 
-	mut reader := amf3v.open(file)
+	mut reader := amf3v.open_read(file)
 	obj := reader.read()
 
 	// check if return type is correct
@@ -43,7 +43,7 @@ fn test_read_array() {
 fn test_read_object() {
 	file := os.read_bytes('./test_files/login_packet.amf3')!
 
-	mut reader := amf3v.open(file)
+	mut reader := amf3v.open_read(file)
 	obj := reader.read()
 
 	// check if return type is correct
