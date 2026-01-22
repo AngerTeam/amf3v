@@ -101,6 +101,8 @@ pub fn (mut reader ByteReader) read_object() AmfObject {
 			panic("Unimplemented extern amf object ${traits.class_name}")
 		}
 
+		object.traits = traits
+
 		for key in traits.member_names {
 			object.properties[key] = reader.read()
 		}

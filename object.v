@@ -10,5 +10,6 @@ pub mut:
 
 pub struct AmfObject {
 pub mut:
+	traits AmfTrait
 	properties map[string]AmfAny
 }
