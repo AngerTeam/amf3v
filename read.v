@@ -125,6 +125,7 @@ pub fn (mut reader ByteReader) read_object() AmfObject {
 	return AmfObject{}
 }
 
+// Reads the next Amf3 object in the file
 pub fn (mut reader ByteReader) read() AmfAny {
 	type := reader.get_u8()
 
@@ -163,6 +164,7 @@ pub fn (mut reader ByteReader) read() AmfAny {
 	panic("Undefined type ID ${type}")
 }
 
+// Creates a reader instance with `data` as the bytes it's reading
 pub fn open_read(data []u8) ByteReader {
 	mut reader := ByteReader{
 		data: data

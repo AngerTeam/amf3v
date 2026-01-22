@@ -17,6 +17,7 @@ fn (mut writer ByteWriter) put_bytes(b []u8) {
 	writer.data << b
 }
 
+// Returns the bytes of the written Amf3 object(s)
 pub fn (mut writer ByteWriter) bytes() []u8 {
 	return writer.data
 }

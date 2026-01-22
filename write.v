@@ -53,6 +53,7 @@ fn (mut writer ByteWriter) write_string(value string) {
 	writer.put_bytes(value.bytes())
 }
 
+// Writes an Amf3 object into the writer
 pub fn (mut writer ByteWriter) write(object AmfAny) {
 	type := match object {
 		bool {
@@ -99,6 +100,7 @@ pub fn (mut writer ByteWriter) write(object AmfAny) {
 	}
 }
 
+// Creates a writer instance
 pub fn open_write() ByteWriter {
 	mut writer := ByteWriter{}
 
