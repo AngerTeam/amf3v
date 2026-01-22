@@ -58,6 +58,71 @@ pub fn (mut reader ByteReader) read_property_list() map[string]AmfAny {
 	return properties
 }
 
+pub fn (mut reader ByteReader) read_traits(value int) AmfTrait {
+	first_time := (value & 1) == 1
+	arg1 := value >> 1
+
+	if first_time {
+		mut traits := AmfTrait{}
+
+		class_name := reader.read_string()
+		is_extern := (arg1 & 1) == 1
+		arg2 := arg1 >> 1
+
+		traits.class_name = class_name
+		if is_extern {
+			traits.extern = true
+		} else {
+			is_dynamic := (arg2 & 1) == 1
+			member_names_count := arg2 >> 1
+
+			mut member_names := []string{len: member_names_count}
+			for i in 0..member_names_count {
+				member_names[i] = reader.read_string()
+			}
+
+			traits.member_names = member_names
+			traits.dynamic = is_dynamic
+		}
+
+		reader.traits_table << traits
+		return traits
+	}
+
+	return reader.traits_table[arg1]
+}
+
+pub fn (mut reader ByteReader) read_object() AmfObject {
+	value, flagged := reader.read_flagged_int()
+	if flagged {
+		mut object := AmfObject{}
+		traits := reader.read_traits(value)
+		if traits.extern {
+			panic("Unimplemented extern amf object ${traits.class_name}")
+		}
+
+		for key in traits.member_names {
+			object.properties[key] = reader.read()
+		}
+
+		if traits.dynamic {
+			for {
+				name := reader.read_string()
+				if name == "" {
+					break
+				}
+				object.properties[name] = reader.read()
+			}
+		}
+
+		reader.object_table << object
+		return object
+	} else {
+		return reader.object_table[value] as AmfObject
+	}
+	return AmfObject{}
+}
+
 pub fn (mut reader ByteReader) read() AmfAny {
 	type := reader.get_u8()
 
@@ -89,6 +154,8 @@ pub fn (mut reader ByteReader) read() AmfAny {
 			return reader.object_table[value]
 		}
 		return AmfArray{}
+	} else if type == amf_object {
+		return reader.read_object()
 	}
 
 	panic("Undefined type ID ${type}")

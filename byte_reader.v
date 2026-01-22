@@ -9,6 +9,7 @@ mut:
 
 	string_table []string
 	object_table []AmfAny
+	traits_table []AmfTrait
 }
 
 fn (mut reader ByteReader) get_u8() u8 {
