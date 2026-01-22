@@ -40,13 +40,13 @@ fn (mut writer ByteWriter) write_flagged_integer(value int, flag bool) {
 
 fn (mut writer ByteWriter) write_string(value string) {
 	if value in writer.string_table {
-		idx := writer.string_table[value]
+		idx := writer.string_table.index(value)
 		writer.write_flagged_integer(idx, false)
 		return
 	}
 
 	if value != "" {
-		writer.string_table[value] = writer.string_table.keys().len
+		writer.string_table << value
 	}
 
 	writer.write_flagged_integer(value.len, true)

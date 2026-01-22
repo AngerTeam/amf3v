@@ -1,10 +1,10 @@
 module amf3v
 
-pub fn read_double(mut reader ByteReader) f64 {
+pub fn (mut reader ByteReader) read_double() f64 {
 	return int64_bits_to_double(reader.get_u64())
 }
 
-pub fn read_packed_int(mut reader ByteReader) int {
+pub fn (mut reader ByteReader) read_packed_int() int {
 	b := reader.get_u8()
 	mut num := int(0x7F & b)
 	if b & 0x80 == 0 { return num }
@@ -21,42 +21,44 @@ pub fn read_packed_int(mut reader ByteReader) int {
 	return (num << 8) | b4
 }
 
-pub fn read_flagged_int(mut reader ByteReader) (int, bool) {
-	num := read_packed_int(mut reader)
+pub fn (mut reader ByteReader) read_flagged_int() (int, bool) {
+	num := reader.read_packed_int()
 	// println("[read_flagged_int] num ${num} | ${(num >> 1)} | ${(num & 1) == 1}")
 	return (num >> 1), (num & 1) == 1
 }
 
-pub fn read_string(mut reader ByteReader) string {
-	value, flagged := read_flagged_int(mut reader)
+pub fn (mut reader ByteReader) read_string() string {
+	value, flagged := reader.read_flagged_int()
 	if flagged {
 		string_data := reader.get_bytes(value)
 		if string_data.len < value {
 			panic("End of stream!")
 		}
 		str := string_data.bytestr()
-		// println("[read_string] ${str}")
+		reader.string_table << str
 		return str
+	} else {
+		return reader.string_table[value]
 	}
 	return ""
 }
 
-pub fn read_property_list(mut reader ByteReader) map[string]AmfAny {
+pub fn (mut reader ByteReader) read_property_list() map[string]AmfAny {
 	mut properties := map[string]AmfAny{}
 
 	for {
-		text := read_string(mut reader)
+		text := reader.read_string()
 		if text == "" {
 			break
 		}
-		obj := read(mut reader)
+		obj := reader.read()
 		properties[text] = obj
 	}
 
 	return properties
 }
 
-pub fn read(mut reader ByteReader) AmfAny {
+pub fn (mut reader ByteReader) read() AmfAny {
 	type := reader.get_u8()
 
 	// println("[read] type ${type}")
@@ -66,22 +68,25 @@ pub fn read(mut reader ByteReader) AmfAny {
 	} else if type == amf_true {
 		return true
 	} else if type == amf_packed_int {
-		return read_packed_int(mut reader)
+		return reader.read_packed_int()
 	} else if type == amf_double {
-		return read_double(mut reader)
+		return reader.read_double()
 	} else if type == amf_string {
-		return read_string(mut reader)
+		return reader.read_string()
 	} else if type == amf_array {
-		value, flagged := read_flagged_int(mut reader)
+		value, flagged := reader.read_flagged_int()
 		if flagged {
 			mut array := AmfArray{}
-			array.associative_elements = read_property_list(mut reader)
+			array.associative_elements = reader.read_property_list()
 
 			for _ in 0..value {
-				array.dense_elements << read(mut reader)
+				array.dense_elements << reader.read()
 			}
 
+			reader.object_table << array
 			return array
+		} else {
+			return reader.object_table[value]
 		}
 		return AmfArray{}
 	}

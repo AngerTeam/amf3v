@@ -7,7 +7,7 @@ fn test_read_array() {
 	file := os.read_bytes('./test_files/deploy_3.441.0_en_android_atc.amf3')!
 
 	mut reader := amf3v.open(file)
-	obj := amf3v.read(mut reader)
+	obj := reader.read()
 
 	// check if return type is correct
 	assert obj is amf3v.AmfArray
@@ -44,7 +44,7 @@ fn test_read_object() {
 	file := os.read_bytes('./test_files/login_packet.amf3')!
 
 	mut reader := amf3v.open(file)
-	obj := amf3v.read(mut reader)
+	obj := reader.read()
 
 	// check if return type is correct
 	assert obj is amf3v.AmfArray

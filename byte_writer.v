@@ -5,7 +5,7 @@ mut:
 	data []u8
 	idx int
 
-	string_table map[string]int
+	string_table []string
 	object_table []AmfAny
 }
 

@@ -6,6 +6,9 @@ struct ByteReader {
 	data []u8
 mut:
 	idx int
+
+	string_table []string
+	object_table []AmfAny
 }
 
 fn (mut reader ByteReader) get_u8() u8 {
