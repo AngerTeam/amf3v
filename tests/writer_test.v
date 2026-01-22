@@ -9,7 +9,11 @@ fn test_read_array() {
 	mut array := amf3v.AmfArray{}
 	array.associative_elements["element1"] = 123
 
-	writer.write(array)
+	mut array2 := amf3v.AmfArray{}
+	array2.dense_elements << array
+	array2.dense_elements << array
+	array2.dense_elements << array
+	writer.write(array2)
 
 	dump(writer.bytes())
 }

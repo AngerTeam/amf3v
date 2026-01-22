@@ -78,11 +78,21 @@ pub fn (mut writer ByteWriter) write(object AmfAny) {
 			writer.write_string(as_string)
 		}
 		amf_array {
-			as_array := object as AmfArray
-			writer.write_flagged_integer(as_array.dense_elements.len, true)
-			for k,v in as_array.associative_elements {
-				writer.write_string(k)
-				writer.write(v)
+			if !(object in writer.object_table) {
+				as_array := object as AmfArray
+				writer.write_flagged_integer(as_array.dense_elements.len, true)
+				for k,v in as_array.associative_elements {
+					writer.write_string(k)
+					writer.write(v)
+				}
+				writer.write_string("")
+				for obj in as_array.dense_elements {
+					writer.write(obj)
+				}
+				writer.object_table << object
+			} else {
+				idx := writer.object_table.index(object)
+				writer.write_flagged_integer(idx, false)
 			}
 		}
 		else { return }

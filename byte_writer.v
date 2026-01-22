@@ -6,6 +6,7 @@ mut:
 	idx int
 
 	string_table map[string]int
+	object_table []AmfAny
 }
 
 fn (mut writer ByteWriter) put_u8(b u8) {
