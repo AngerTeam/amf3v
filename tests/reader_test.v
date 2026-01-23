@@ -51,20 +51,21 @@ fn test_read_object() {
 
 	// check if object info is correct
 	object := obj as amf3v.AmfObject
-	assert object.properties.len == 9
+	assert object.static_members.len == 0
+	assert object.dynamic_members.len == 9
 
-	// check if properties are correct
-	assert object.properties.keys()[0] == "pf"
-	assert object.properties.keys()[1] == "locale"
-	assert object.properties.keys()[2] == "udid"
-	assert object.properties.keys()[3] == "client_version"
-	assert object.properties.keys()[4] == "bid"
-	assert object.properties.keys()[5] == "not_from_store"
-	assert object.properties.keys()[6] == "cmd"
-	assert object.properties.keys()[7] == "ts"
-	assert object.properties.keys()[8] == "sig"
+	// check if dynamic members are correct
+	assert object.dynamic_members.keys()[0] == "pf"
+	assert object.dynamic_members.keys()[1] == "locale"
+	assert object.dynamic_members.keys()[2] == "udid"
+	assert object.dynamic_members.keys()[3] == "client_version"
+	assert object.dynamic_members.keys()[4] == "bid"
+	assert object.dynamic_members.keys()[5] == "not_from_store"
+	assert object.dynamic_members.keys()[6] == "cmd"
+	assert object.dynamic_members.keys()[7] == "ts"
+	assert object.dynamic_members.keys()[8] == "sig"
 
 	// check random field
-	assert object.properties["cmd"] is string
-	assert object.properties["cmd"] as string == "registration_guest"
+	assert object.dynamic_members["cmd"] is string
+	assert object.dynamic_members["cmd"] as string == "registration_guest"
 }

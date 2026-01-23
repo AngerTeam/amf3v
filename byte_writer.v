@@ -7,6 +7,7 @@ mut:
 
 	string_table []string
 	object_table []AmfAny
+	traits_table []AmfTrait
 }
 
 fn (mut writer ByteWriter) put_u8(b u8) {

@@ -53,6 +53,57 @@ fn (mut writer ByteWriter) write_string(value string) {
 	writer.put_bytes(value.bytes())
 }
 
+fn (mut writer ByteWriter) write_traits(traits AmfTrait) {
+	if traits in writer.traits_table {
+		idx := writer.traits_table.index(traits)
+		writer.write_flagged_integer(idx, false)
+		return
+	}
+
+	writer.traits_table << traits
+
+	if traits.extern {
+		panic("Unimplemented extern amf object ${traits.class_name}")
+	}
+
+	mut data_num := (traits.member_names.len << 4) | 3
+	if traits.dynamic {
+		data_num |= 8
+	}
+
+	writer.write_packed_integer(data_num)
+	writer.write_string(traits.class_name)
+	for name in traits.member_names {
+		writer.write_string(name)
+	}
+}
+
+fn (mut writer ByteWriter) write_object(value AmfObject) {
+	if value in writer.object_table {
+		idx := writer.object_table.index(value)
+		writer.write_flagged_integer(idx, false)
+		return
+	}
+
+	writer.object_table << value
+
+	writer.write_traits(value.traits)
+	for k, v in value.static_members {
+		writer.write(v)
+	}
+
+	if !value.traits.dynamic {
+		return
+	}
+
+	for k, v in value.dynamic_members {
+		writer.write_string(k)
+		writer.write(v)
+	}
+
+	writer.write_string("")
+}
+
 // Writes an Amf3 object into the writer
 pub fn (mut writer ByteWriter) write(object AmfAny) {
 	type := match object {
@@ -64,6 +115,7 @@ pub fn (mut writer ByteWriter) write(object AmfAny) {
 		f64 { amf_double }
 		string { amf_string }
 		AmfArray { amf_array }
+		AmfObject { amf_object }
 		else { amf_undefined }
 	}
 
@@ -95,6 +147,9 @@ pub fn (mut writer ByteWriter) write(object AmfAny) {
 				idx := writer.object_table.index(object)
 				writer.write_flagged_integer(idx, false)
 			}
+		}
+		amf_object {
+			writer.write_object(object as AmfObject)
 		}
 		else { return }
 	}

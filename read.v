@@ -104,7 +104,7 @@ pub fn (mut reader ByteReader) read_object() AmfObject {
 		object.traits = traits
 
 		for key in traits.member_names {
-			object.properties[key] = reader.read()
+			object.static_members[key] = reader.read()
 		}
 
 		if traits.dynamic {
@@ -113,7 +113,7 @@ pub fn (mut reader ByteReader) read_object() AmfObject {
 				if name == "" {
 					break
 				}
-				object.properties[name] = reader.read()
+				object.dynamic_members[name] = reader.read()
 			}
 		}
 

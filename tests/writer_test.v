@@ -24,3 +24,25 @@ fn test_write_array() {
 	assert check_obj is amf3v.AmfArray
 	assert check_obj as amf3v.AmfArray == array2
 }
+
+fn test_write_object_fully_dynamic() {
+	mut writer := amf3v.open_write()
+
+	mut object := amf3v.AmfObject{}
+	object.traits = amf3v.AmfTrait{
+		class_name: "",
+		dynamic: true,
+		extern: false,
+		member_names: []
+	}
+
+	object.dynamic_members["cmd"] = "registration_guest"
+	object.dynamic_members["result"] = 1
+
+	writer.write(object)
+
+	mut reader := amf3v.open_read(writer.bytes())
+	check_obj := reader.read()
+	assert check_obj is amf3v.AmfObject
+	assert check_obj as amf3v.AmfObject == object
+}

@@ -13,5 +13,6 @@ pub mut:
 pub struct AmfObject {
 pub mut:
 	traits AmfTrait
-	properties map[string]AmfAny
+	static_members map[string]AmfAny
+	dynamic_members map[string]AmfAny
 }
