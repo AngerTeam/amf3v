@@ -1,8 +1,8 @@
 module amf3v
 
-fn (mut writer ByteWriter) write_packed_integer(value int) {
+fn (mut writer ByteWriter) write_packed_integer(value int) ! {
 	if value < 0 {
-		panic("An attempt was made to serialize a negative integer.")
+		return error("An attempt was made to serialize a negative integer.")
 	}
 
 	if value < 128 {
@@ -31,17 +31,17 @@ fn (mut writer ByteWriter) write_packed_integer(value int) {
 		return
 	}
 
-	panic("An integer too large to serialize was serialized.")
+	return error("An integer too large to serialize was serialized.")
 }
 
-fn (mut writer ByteWriter) write_flagged_integer(value int, flag bool) {
-	writer.write_packed_integer((value << 1) | (if flag { 1 } else { 0 }))
+fn (mut writer ByteWriter) write_flagged_integer(value int, flag bool) ! {
+	writer.write_packed_integer((value << 1) | (if flag { 1 } else { 0 }))!
 }
 
-fn (mut writer ByteWriter) write_string(value string) {
+fn (mut writer ByteWriter) write_string(value string) ! {
 	if value in writer.string_table {
 		idx := writer.string_table.index(value)
-		writer.write_flagged_integer(idx, false)
+		writer.write_flagged_integer(idx, false)!
 		return
 	}
 
@@ -49,21 +49,21 @@ fn (mut writer ByteWriter) write_string(value string) {
 		writer.string_table << value
 	}
 
-	writer.write_flagged_integer(value.len, true)
+	writer.write_flagged_integer(value.len, true)!
 	writer.put_bytes(value.bytes())
 }
 
-fn (mut writer ByteWriter) write_traits(traits AmfTrait) {
+fn (mut writer ByteWriter) write_traits(traits AmfTrait) ! {
 	if traits in writer.traits_table {
 		idx := writer.traits_table.index(traits)
-		writer.write_flagged_integer(idx, false)
+		writer.write_flagged_integer(idx, false)!
 		return
 	}
 
 	writer.traits_table << traits
 
 	if traits.extern {
-		panic("Unimplemented extern amf object ${traits.class_name}")
+		return error("Unimplemented extern amf object ${traits.class_name}")
 	}
 
 	mut data_num := (traits.member_names.len << 4) | 3
@@ -71,25 +71,25 @@ fn (mut writer ByteWriter) write_traits(traits AmfTrait) {
 		data_num |= 8
 	}
 
-	writer.write_packed_integer(data_num)
-	writer.write_string(traits.class_name)
+	writer.write_packed_integer(data_num)!
+	writer.write_string(traits.class_name)!
 	for name in traits.member_names {
-		writer.write_string(name)
+		writer.write_string(name)!
 	}
 }
 
-fn (mut writer ByteWriter) write_object(value AmfObject) {
+fn (mut writer ByteWriter) write_object(value AmfObject) ! {
 	if value in writer.object_table {
 		idx := writer.object_table.index(value)
-		writer.write_flagged_integer(idx, false)
+		writer.write_flagged_integer(idx, false)!
 		return
 	}
 
 	writer.object_table << value
 
-	writer.write_traits(value.traits)
+	writer.write_traits(value.traits)!
 	for k, v in value.static_members {
-		writer.write(v)
+		writer.write(v)!
 	}
 
 	if !value.traits.dynamic {
@@ -97,15 +97,15 @@ fn (mut writer ByteWriter) write_object(value AmfObject) {
 	}
 
 	for k, v in value.dynamic_members {
-		writer.write_string(k)
-		writer.write(v)
+		writer.write_string(k)!
+		writer.write(v)!
 	}
 
-	writer.write_string("")
+	writer.write_string("")!
 }
 
 // Writes an Amf3 object into the writer
-pub fn (mut writer ByteWriter) write(object AmfAny) {
+pub fn (mut writer ByteWriter) write(object AmfAny) ! {
 	type := match object {
 		bool {
 			as_bool := object as bool
@@ -124,32 +124,32 @@ pub fn (mut writer ByteWriter) write(object AmfAny) {
 	match type {
 		amf_packed_int {
 			as_int := object as int
-			writer.write_packed_integer(as_int)
+			writer.write_packed_integer(as_int)!
 		}
 		amf_string {
 			as_string := object as string
-			writer.write_string(as_string)
+			writer.write_string(as_string)!
 		}
 		amf_array {
 			if !(object in writer.object_table) {
 				as_array := object as AmfArray
-				writer.write_flagged_integer(as_array.dense_elements.len, true)
+				writer.write_flagged_integer(as_array.dense_elements.len, true)!
 				for k,v in as_array.associative_elements {
-					writer.write_string(k)
-					writer.write(v)
+					writer.write_string(k)!
+					writer.write(v)!
 				}
-				writer.write_string("")
+				writer.write_string("")!
 				for obj in as_array.dense_elements {
-					writer.write(obj)
+					writer.write(obj)!
 				}
 				writer.object_table << object
 			} else {
 				idx := writer.object_table.index(object)
-				writer.write_flagged_integer(idx, false)
+				writer.write_flagged_integer(idx, false)!
 			}
 		}
 		amf_object {
-			writer.write_object(object as AmfObject)
+			writer.write_object(object as AmfObject)!
 		}
 		else { return }
 	}

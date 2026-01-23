@@ -7,7 +7,7 @@ fn test_read_array() {
 	file := os.read_bytes('./test_files/deploy_3.441.0_en_android_atc.amf3')!
 
 	mut reader := amf3v.open_read(file)
-	obj := reader.read()
+	obj := reader.read()!
 
 	// check if return type is correct
 	assert obj is amf3v.AmfArray
@@ -44,7 +44,7 @@ fn test_read_object() {
 	file := os.read_bytes('./test_files/login_packet.amf3')!
 
 	mut reader := amf3v.open_read(file)
-	obj := reader.read()
+	obj := reader.read()!
 
 	// check if return type is correct
 	assert obj is amf3v.AmfObject
@@ -68,4 +68,16 @@ fn test_read_object() {
 	// check random field
 	assert object.dynamic_members["cmd"] is string
 	assert object.dynamic_members["cmd"] as string == "registration_guest"
+}
+
+fn test_read_nonsense() {
+	data := [u8(0)]
+
+	// this should NEVER pass without an error
+	mut reader := amf3v.open_read(data)
+	obj := reader.read() or {
+		return
+	}
+
+	assert false == true
 }

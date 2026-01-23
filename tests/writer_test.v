@@ -17,10 +17,10 @@ fn test_write_array() {
 	array2.dense_elements << array
 	array2.dense_elements << array
 
-	writer.write(array2)
+	writer.write(array2)!
 
 	mut reader := amf3v.open_read(writer.bytes())
-	check_obj := reader.read()
+	check_obj := reader.read()!
 	assert check_obj is amf3v.AmfArray
 	assert check_obj as amf3v.AmfArray == array2
 }
@@ -39,10 +39,10 @@ fn test_write_object_fully_dynamic() {
 	object.dynamic_members["cmd"] = "registration_guest"
 	object.dynamic_members["result"] = 1
 
-	writer.write(object)
+	writer.write(object)!
 
 	mut reader := amf3v.open_read(writer.bytes())
-	check_obj := reader.read()
+	check_obj := reader.read()!
 	assert check_obj is amf3v.AmfObject
 	assert check_obj as amf3v.AmfObject == object
 }
