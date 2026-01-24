@@ -1,36 +1,36 @@
 module amf3v
 
-pub fn (mut reader ByteReader) read_double() f64 {
-	return int64_bits_to_double(reader.get_u64())
+pub fn (mut reader ByteReader) read_double() !f64 {
+	return int64_bits_to_double(reader.get_u64()!)
 }
 
-pub fn (mut reader ByteReader) read_packed_int() int {
-	b := reader.get_u8()
+pub fn (mut reader ByteReader) read_packed_int() !int {
+	b := reader.get_u8()!
 	mut num := int(0x7F & b)
 	if b & 0x80 == 0 { return num }
 
-	b2 := reader.get_u8()
+	b2 := reader.get_u8()!
 	num = (num << 7) | (0x7F & b2)
 	if b2 & 0x80 == 0 { return num }
 
-	b3 := reader.get_u8()
+	b3 := reader.get_u8()!
 	num = (num << 7) | (0x7F & b3)
 	if b3 & 0x80 == 0 { return num }
 
-	b4 := reader.get_u8()
+	b4 := reader.get_u8()!
 	return (num << 8) | b4
 }
 
-pub fn (mut reader ByteReader) read_flagged_int() (int, bool) {
-	num := reader.read_packed_int()
+pub fn (mut reader ByteReader) read_flagged_int() !(int, bool) {
+	num := reader.read_packed_int()!
 	// println("[read_flagged_int] num ${num} | ${(num >> 1)} | ${(num & 1) == 1}")
 	return (num >> 1), (num & 1) == 1
 }
 
 pub fn (mut reader ByteReader) read_string() !string {
-	value, flagged := reader.read_flagged_int()
+	value, flagged := reader.read_flagged_int()!
 	if flagged {
-		string_data := reader.get_bytes(value)
+		string_data := reader.get_bytes(value)!
 		if string_data.len < value {
 			return error("End of stream!")
 		}
@@ -93,7 +93,7 @@ pub fn (mut reader ByteReader) read_traits(value int) !AmfTrait {
 }
 
 pub fn (mut reader ByteReader) read_object() !AmfObject {
-	value, flagged := reader.read_flagged_int()
+	value, flagged := reader.read_flagged_int()!
 	if flagged {
 		mut object := AmfObject{}
 		traits := reader.read_traits(value)!
@@ -127,7 +127,7 @@ pub fn (mut reader ByteReader) read_object() !AmfObject {
 
 // Reads the next Amf3 object in the file
 pub fn (mut reader ByteReader) read() !AmfAny {
-	type := reader.get_u8()
+	type := reader.get_u8()!
 
 	// println("[read] type ${type}")
 
@@ -136,13 +136,13 @@ pub fn (mut reader ByteReader) read() !AmfAny {
 	} else if type == amf_true {
 		return true
 	} else if type == amf_packed_int {
-		return reader.read_packed_int()
+		return reader.read_packed_int()!
 	} else if type == amf_double {
-		return reader.read_double()
+		return reader.read_double()!
 	} else if type == amf_string {
 		return reader.read_string()!
 	} else if type == amf_array {
-		value, flagged := reader.read_flagged_int()
+		value, flagged := reader.read_flagged_int()!
 		if flagged {
 			mut array := AmfArray{}
 			array.associative_elements = reader.read_property_list()!

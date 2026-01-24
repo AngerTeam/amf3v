@@ -12,21 +12,30 @@ mut:
 	traits_table []AmfTrait
 }
 
-fn (mut reader ByteReader) get_u8() u8 {
+fn (mut reader ByteReader) get_u8() !u8 {
 	idx := reader.idx
 	reader.idx += 1
+	if idx > reader.data.len {
+		return error("Couldn't get u8 from data because the read index goes past the data's size [${idx}/${reader.data.len}]")
+	}
 	return reader.data[idx]
 }
 
-fn (mut reader ByteReader) get_u64() u64 {
+fn (mut reader ByteReader) get_u64() !u64 {
 	len := int(sizeof(u64))
 	idx := reader.idx
 	reader.idx += len
+	if idx > reader.data.len {
+		return error("Couldn't get u64 from data because the read index goes past the data's size [${idx}/${reader.data.len}]")
+	}
 	return binary.little_endian_u64(reader.data[idx..idx+len])
 }
 
-fn (mut reader ByteReader) get_bytes(len int) []u8 {
+fn (mut reader ByteReader) get_bytes(len int) ![]u8 {
 	idx := reader.idx
 	reader.idx += len
+	if idx+len > reader.data.len {
+		return error("Couldn't get bytes from data because the read index goes past the data's size [${idx+len}/${reader.data.len}]")
+	}
 	return reader.data[idx..idx+len]
 }
