@@ -3,7 +3,7 @@ module amf3v
 struct ByteWriter {
 mut:
 	data []u8
-	idx int
+	idx  int
 
 	string_table []string
 	object_table []AmfAny

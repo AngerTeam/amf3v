@@ -2,7 +2,7 @@ module amf3v
 
 fn (mut writer ByteWriter) write_packed_integer(value int) ! {
 	if value < 0 {
-		return error("An attempt was made to serialize a negative integer.")
+		return error('An attempt was made to serialize a negative integer.')
 	}
 
 	if value < 128 {
@@ -31,7 +31,7 @@ fn (mut writer ByteWriter) write_packed_integer(value int) ! {
 		return
 	}
 
-	return error("An integer too large to serialize was serialized.")
+	return error('An integer too large to serialize was serialized.')
 }
 
 fn (mut writer ByteWriter) write_flagged_integer(value int, flag bool) ! {
@@ -45,7 +45,7 @@ fn (mut writer ByteWriter) write_string(value string) ! {
 		return
 	}
 
-	if value != "" {
+	if value != '' {
 		writer.string_table << value
 	}
 
@@ -63,7 +63,7 @@ fn (mut writer ByteWriter) write_traits(traits AmfTrait) ! {
 	writer.traits_table << traits
 
 	if traits.extern {
-		return error("Unimplemented extern amf object ${traits.class_name}")
+		return error('Unimplemented extern amf object ${traits.class_name}')
 	}
 
 	mut data_num := (traits.member_names.len << 4) | 3
@@ -101,7 +101,7 @@ fn (mut writer ByteWriter) write_object(value AmfObject) ! {
 		writer.write(v)!
 	}
 
-	writer.write_string("")!
+	writer.write_string('')!
 }
 
 // Writes an Amf3 object into the writer
@@ -109,14 +109,30 @@ pub fn (mut writer ByteWriter) write(object AmfAny) ! {
 	type := match object {
 		bool {
 			as_bool := object as bool
-			if as_bool { amf_true } else { amf_false }
+			if as_bool {
+				amf_true
+			} else {
+				amf_false
+			}
 		}
-		int { amf_packed_int }
-		f64 { amf_double }
-		string { amf_string }
-		AmfArray { amf_array }
-		AmfObject { amf_object }
-		else { amf_undefined }
+		int {
+			amf_packed_int
+		}
+		f64 {
+			amf_double
+		}
+		string {
+			amf_string
+		}
+		AmfArray {
+			amf_array
+		}
+		AmfObject {
+			amf_object
+		}
+		else {
+			amf_undefined
+		}
 	}
 
 	writer.put_u8(u8(type))
@@ -131,14 +147,14 @@ pub fn (mut writer ByteWriter) write(object AmfAny) ! {
 			writer.write_string(as_string)!
 		}
 		amf_array {
-			if !(object in writer.object_table) {
+			if object !in writer.object_table {
 				as_array := object as AmfArray
 				writer.write_flagged_integer(as_array.dense_elements.len, true)!
-				for k,v in as_array.associative_elements {
+				for k, v in as_array.associative_elements {
 					writer.write_string(k)!
 					writer.write(v)!
 				}
-				writer.write_string("")!
+				writer.write_string('')!
 				for obj in as_array.dense_elements {
 					writer.write(obj)!
 				}
@@ -151,7 +167,9 @@ pub fn (mut writer ByteWriter) write(object AmfAny) ! {
 		amf_object {
 			writer.write_object(object as AmfObject)!
 		}
-		else { return }
+		else {
+			return
+		}
 	}
 }
 

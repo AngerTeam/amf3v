@@ -7,15 +7,21 @@ pub fn (mut reader ByteReader) read_double() !f64 {
 pub fn (mut reader ByteReader) read_packed_int() !int {
 	b := reader.get_u8()!
 	mut num := int(0x7F & b)
-	if b & 0x80 == 0 { return num }
+	if b & 0x80 == 0 {
+		return num
+	}
 
 	b2 := reader.get_u8()!
 	num = (num << 7) | (0x7F & b2)
-	if b2 & 0x80 == 0 { return num }
+	if b2 & 0x80 == 0 {
+		return num
+	}
 
 	b3 := reader.get_u8()!
 	num = (num << 7) | (0x7F & b3)
-	if b3 & 0x80 == 0 { return num }
+	if b3 & 0x80 == 0 {
+		return num
+	}
 
 	b4 := reader.get_u8()!
 	return (num << 8) | b4
@@ -24,7 +30,7 @@ pub fn (mut reader ByteReader) read_packed_int() !int {
 pub fn (mut reader ByteReader) read_flagged_int() !(int, bool) {
 	num := reader.read_packed_int()!
 	// println("[read_flagged_int] num ${num} | ${(num >> 1)} | ${(num & 1) == 1}")
-	return (num >> 1), (num & 1) == 1
+	return num >> 1, (num & 1) == 1
 }
 
 pub fn (mut reader ByteReader) read_string() !string {
@@ -32,7 +38,7 @@ pub fn (mut reader ByteReader) read_string() !string {
 	if flagged {
 		string_data := reader.get_bytes(value)!
 		if string_data.len < value {
-			return error("End of stream!")
+			return error('End of stream!')
 		}
 		str := string_data.bytestr()
 		reader.string_table << str
@@ -40,7 +46,7 @@ pub fn (mut reader ByteReader) read_string() !string {
 	} else {
 		return reader.string_table[value]
 	}
-	return ""
+	return ''
 }
 
 pub fn (mut reader ByteReader) read_property_list() !map[string]AmfAny {
@@ -48,7 +54,7 @@ pub fn (mut reader ByteReader) read_property_list() !map[string]AmfAny {
 
 	for {
 		text := reader.read_string()!
-		if text == "" {
+		if text == '' {
 			break
 		}
 		obj := reader.read()!
@@ -77,7 +83,7 @@ pub fn (mut reader ByteReader) read_traits(value int) !AmfTrait {
 			member_names_count := arg2 >> 1
 
 			mut member_names := []string{len: member_names_count}
-			for i in 0..member_names_count {
+			for i in 0 .. member_names_count {
 				member_names[i] = reader.read_string()!
 			}
 
@@ -98,7 +104,7 @@ pub fn (mut reader ByteReader) read_object() !AmfObject {
 		mut object := AmfObject{}
 		traits := reader.read_traits(value)!
 		if traits.extern {
-			return error("Unimplemented extern amf object ${traits.class_name}")
+			return error('Unimplemented extern amf object ${traits.class_name}')
 		}
 
 		object.traits = traits
@@ -110,7 +116,7 @@ pub fn (mut reader ByteReader) read_object() !AmfObject {
 		if traits.dynamic {
 			for {
 				name := reader.read_string()!
-				if name == "" {
+				if name == '' {
 					break
 				}
 				object.dynamic_members[name] = reader.read()!
@@ -147,7 +153,7 @@ pub fn (mut reader ByteReader) read() !AmfAny {
 			mut array := AmfArray{}
 			array.associative_elements = reader.read_property_list()!
 
-			for _ in 0..value {
+			for _ in 0 .. value {
 				array.dense_elements << reader.read()!
 			}
 
@@ -161,7 +167,7 @@ pub fn (mut reader ByteReader) read() !AmfAny {
 		return reader.read_object()!
 	}
 
-	return error("Undefined type ID ${type}")
+	return error('Undefined type ID ${type}')
 }
 
 // Creates a reader instance with `data` as the bytes it's reading
